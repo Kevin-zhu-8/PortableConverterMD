@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="o.jpg" width="128" alt="PortableConverterMD">
-</p>
-
 <h1 align="center">PortableConverterMD</h1>
 
 <p align="center">
