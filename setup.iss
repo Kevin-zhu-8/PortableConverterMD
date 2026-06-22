@@ -8,19 +8,19 @@ DefaultDirName={autopf}\PortableConverterMD
 DefaultGroupName=PortableConverterMD
 OutputDir=.\installer
 OutputBaseFilename=PortableConverterMD-Setup
-SetupIconFile=ZENO.png
+SetupIconFile=o.jpg
 Compression=lzma2
 SolidCompression=yes
-UninstallDisplayIcon={app}\ZENO.png
+UninstallDisplayIcon={app}\o.jpg
 WizardStyle=modern
 
 [Files]
 Source: "dist\PortableConverterMD\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\PortableConverterMD"; Filename: "{app}\PortableConverterMD.exe"; IconFilename: "{app}\ZENO.png"
+Name: "{group}\PortableConverterMD"; Filename: "{app}\PortableConverterMD.exe"; IconFilename: "{app}\o.jpg"
 Name: "{group}\卸载 PortableConverterMD"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\PortableConverterMD"; Filename: "{app}\PortableConverterMD.exe"; IconFilename: "{app}\ZENO.png"; Tasks: desktopicon
+Name: "{autodesktop}\PortableConverterMD"; Filename: "{app}\PortableConverterMD.exe"; IconFilename: "{app}\o.jpg"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "其他:"

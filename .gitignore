@@ -22,4 +22,5 @@ installer/
 
 # 资源（保留应用图标）
 *.png
-!ZENO.png
+*.jpg
+!o.jpg

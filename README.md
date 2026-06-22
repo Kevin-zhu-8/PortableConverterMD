@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="ZENO.png" width="128" alt="PortableConverterMD">
+  <img src="o.jpg" width="128" alt="PortableConverterMD">
 </p>
 
 <h1 align="center">PortableConverterMD</h1>
@@ -67,7 +67,7 @@ pyinstaller portable_converter_md.spec
 ├── requirements.txt                 # Python 依赖
 ├── portable_converter_md.spec       # PyInstaller 打包配置
 ├── setup.iss                        # Inno Setup 安装包配置
-├── ZENO.png                         # 应用图标
+├── o.jpg                         # 应用图标
 ├── test_converter.py                # 单元测试
 └── docs/                            # 设计文档
 ```

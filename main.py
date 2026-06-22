@@ -234,7 +234,7 @@ class MainWindow(QMainWindow):
         self.resize(620, 480)
 
         # 窗口图标
-        icon_path = os.path.join(_get_app_dir(), "ZENO.png")
+        icon_path = os.path.join(_get_app_dir(), "o.jpg")
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
 
@@ -407,7 +407,7 @@ def main():
     app.setStyle("Fusion")
 
     # 应用图标（窗口 + 任务栏）
-    icon_path = os.path.join(_get_app_dir(), "ZENO.png")
+    icon_path = os.path.join(_get_app_dir(), "o.jpg")
     if os.path.exists(icon_path):
         icon = QIcon(icon_path)
         app.setWindowIcon(icon)
