@@ -1,8 +1,61 @@
 """PortableConverterMD — 文件转 Markdown 桌面工具"""
+import logging
 import os
+import traceback
+from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QThread, Qt, QUrl, Signal
+
+# 日志配置
+_logger = None
+_file_handler = None
+
+
+def _get_logger(with_file: str = "") -> logging.Logger:
+    """获取日志记录器。
+    - 不传参：仅控制台输出（测试用）
+    - 传目录路径：同时写 conversion.log 到该目录
+    """
+    global _logger, _file_handler
+    if _logger is None:
+        _logger = logging.getLogger("PortableConverterMD")
+        _logger.setLevel(logging.DEBUG)
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO)
+        console.setFormatter(logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(message)s",
+            datefmt="%H:%M:%S"
+        ))
+        _logger.addHandler(console)
+
+    if with_file:
+        # 关闭旧文件 handler
+        if _file_handler:
+            _file_handler.close()
+            _logger.removeHandler(_file_handler)
+            _file_handler = None
+        os.makedirs(with_file, exist_ok=True)
+        log_path = os.path.join(with_file, "conversion.log")
+        _file_handler = logging.FileHandler(log_path, encoding="utf-8")
+        _file_handler.setLevel(logging.DEBUG)
+        _file_handler.setFormatter(logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(message)s"
+        ))
+        _logger.addHandler(_file_handler)
+        _logger.info(f"=== PortableConverterMD 日志开始 {datetime.now():%Y-%m-%d %H:%M:%S} ===")
+
+    return _logger
+
+
+def _close_file_log():
+    """关闭文件日志 handler（释放文件句柄）。"""
+    global _logger, _file_handler
+    if _file_handler:
+        _file_handler.close()
+        if _logger:
+            _logger.removeHandler(_file_handler)
+        _file_handler = None
 from PySide6.QtGui import QDragEnterEvent, QDropEvent, QFont
 from PySide6.QtWidgets import (
     QApplication, QFileDialog, QHBoxLayout, QLabel, QListWidget,
@@ -27,6 +80,7 @@ def convert_file(file_path: str, output_dir: str) -> str:
     """转换单个文件为 Markdown，返回输出文件路径。"""
     file_path = str(file_path)
     output_dir = str(output_dir)
+    log = _get_logger()
 
     # 确保输出目录存在
     os.makedirs(output_dir, exist_ok=True)
@@ -34,6 +88,8 @@ def convert_file(file_path: str, output_dir: str) -> str:
     # 生成输出文件名：同名 .md
     input_name = Path(file_path).stem
     output_path = os.path.join(output_dir, f"{input_name}.md")
+
+    log.info(f"开始转换: {os.path.basename(file_path)}")
 
     # 调用 MarkItDown 转换
     converter = _get_converter()
@@ -43,6 +99,7 @@ def convert_file(file_path: str, output_dir: str) -> str:
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(result.text_content)
 
+    log.info(f"转换成功: {os.path.basename(file_path)} → {os.path.basename(output_path)}")
     return output_path
 
 
@@ -53,8 +110,8 @@ def convert_file(file_path: str, output_dir: str) -> str:
 
 class ConvertWorker(QThread):
     """后台线程执行批量转换，不阻塞 GUI。"""
-    progress_updated = Signal(int, int)  # current, total
-    conversion_done = Signal(list)       # output_paths
+    progress_updated = Signal(int, int)       # current, total
+    conversion_done = Signal(list)            # list[dict]: {file, output, error}
 
     def __init__(self, file_paths: list, output_dir: str):
         super().__init__()
@@ -62,16 +119,23 @@ class ConvertWorker(QThread):
         self.output_dir = output_dir
 
     def run(self):
+        # 启用文件日志
+        log = _get_logger(self.output_dir)
         results = []
         total = len(self.file_paths)
-        for i, file_path in enumerate(self.file_paths):
-            try:
-                out_path = convert_file(file_path, self.output_dir)
-                results.append(out_path)
-            except Exception as e:
-                print(f"[PortableConverterMD] 转换失败 [{file_path}]: {e}")
-                results.append(None)
-            self.progress_updated.emit(i + 1, total)
+        try:
+            for i, file_path in enumerate(self.file_paths):
+                try:
+                    out_path = convert_file(file_path, self.output_dir)
+                    results.append({"file": file_path, "output": out_path, "error": None})
+                except Exception as e:
+                    err_msg = f"{type(e).__name__}: {e}"
+                    log.error(f"转换失败 [{os.path.basename(file_path)}]: {err_msg}")
+                    log.debug(traceback.format_exc())
+                    results.append({"file": file_path, "output": None, "error": err_msg})
+                self.progress_updated.emit(i + 1, total)
+        finally:
+            _close_file_log()
         self.conversion_done.emit(results)
 
 
@@ -278,17 +342,34 @@ class MainWindow(QMainWindow):
         self.lbl_status.setText(f"已转换 {current}/{total}")
 
     def _on_done(self, results: list):
-        success = sum(1 for r in results if r is not None)
+        success = sum(1 for r in results if r["output"] is not None)
+        failed = [r for r in results if r["output"] is None]
         total = len(results)
         self.progress.setVisible(False)
         self.lbl_status.setText(f"完成：{success}/{total} 个文件转换成功")
         self.drop_zone.setEnabled(True)
         self.btn_open_dir.setEnabled(True)
         self.btn_convert.setEnabled(True)
-        QMessageBox.information(
-            self, "转换完成",
-            f"成功转换 {success}/{total} 个文件。\n输出目录：{self.output_dir}"
-        )
+
+        # 组装完成消息
+        msg = f"成功转换 {success}/{total} 个文件。\n输出目录：{self.output_dir}"
+        if failed:
+            msg += "\n\n失败文件："
+            for r in failed:
+                fname = os.path.basename(r["file"])
+                msg += f"\n  • {fname}: {r['error']}"
+            msg += "\n\n详细日志见 conversion.log"
+
+        box = QMessageBox(self)
+        box.setWindowTitle("转换完成")
+        box.setText(msg)
+        box.setIcon(QMessageBox.Warning if failed else QMessageBox.Information)
+        if failed:
+            box.setStandardButtons(QMessageBox.Ok)
+            box.setDetailedText(
+                "完整日志文件：" + os.path.join(self.output_dir, "conversion.log")
+            )
+        box.exec()
 
     def _open_output_dir(self):
         """用系统文件管理器打开输出目录。"""
