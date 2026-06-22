@@ -2,6 +2,8 @@
 import os
 from pathlib import Path
 
+from PySide6.QtCore import QThread, Signal
+
 # 延迟导入，GUI 启动时不加载 markitdown
 _md = None
 
@@ -36,3 +38,32 @@ def convert_file(file_path: str, output_dir: str) -> str:
         f.write(result.text_content)
 
     return output_path
+
+
+# ============================================================
+# 后台转换线程
+# ============================================================
+
+
+class ConvertWorker(QThread):
+    """后台线程执行批量转换，不阻塞 GUI。"""
+    progress_updated = Signal(int, int)  # current, total
+    conversion_done = Signal(list)       # output_paths
+
+    def __init__(self, file_paths: list, output_dir: str):
+        super().__init__()
+        self.file_paths = file_paths
+        self.output_dir = output_dir
+
+    def run(self):
+        results = []
+        total = len(self.file_paths)
+        for i, file_path in enumerate(self.file_paths):
+            try:
+                out_path = convert_file(file_path, self.output_dir)
+                results.append(out_path)
+            except Exception as e:
+                print(f"[PortableConverterMD] 转换失败 [{file_path}]: {e}")
+                results.append(None)
+            self.progress_updated.emit(i + 1, total)
+        self.conversion_done.emit(results)
