@@ -4,12 +4,12 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('ZENO.png', '.')],
     hiddenimports=['markitdown', 'markitdown._markitdown'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['matplotlib', 'numba', 'scipy', 'PIL', 'cv2', 'notebook', 'ipykernel'],
     noarchive=False,
 )
 
@@ -24,7 +24,7 @@ exe = EXE(
     name='PortableConverterMD',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=False,
+    strip=True,
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
@@ -33,5 +33,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,
+    icon='ZENO.png',
 )

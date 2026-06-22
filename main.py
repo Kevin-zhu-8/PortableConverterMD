@@ -1,11 +1,30 @@
 """PortableConverterMD — 文件转 Markdown 桌面工具"""
 import logging
 import os
+import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QThread, Qt, QUrl, Signal
+from PySide6.QtGui import QDragEnterEvent, QDropEvent, QFont, QIcon
+from PySide6.QtWidgets import (
+    QApplication, QFileDialog, QHBoxLayout, QLabel, QListWidget,
+    QListWidgetItem, QMainWindow, QMessageBox, QProgressBar,
+    QPushButton, QVBoxLayout, QWidget,
+)
+
+# ============================================================
+# 工具函数
+# ============================================================
+
+
+def _get_app_dir() -> str:
+    """获取应用根目录（源码运行或 PyInstaller 打包均正确）。"""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
 
 # 日志配置
 _logger = None
@@ -14,7 +33,7 @@ _file_handler = None
 
 def _get_logger(with_file: str = "") -> logging.Logger:
     """获取日志记录器。
-    - 不传参：仅控制台输出（测试用）
+    - 不传参：仅控制台输出
     - 传目录路径：同时写 conversion.log 到该目录
     """
     global _logger, _file_handler
@@ -30,7 +49,6 @@ def _get_logger(with_file: str = "") -> logging.Logger:
         _logger.addHandler(console)
 
     if with_file:
-        # 关闭旧文件 handler
         if _file_handler:
             _file_handler.close()
             _logger.removeHandler(_file_handler)
@@ -56,12 +74,6 @@ def _close_file_log():
         if _logger:
             _logger.removeHandler(_file_handler)
         _file_handler = None
-from PySide6.QtGui import QDragEnterEvent, QDropEvent, QFont
-from PySide6.QtWidgets import (
-    QApplication, QFileDialog, QHBoxLayout, QLabel, QListWidget,
-    QListWidgetItem, QMainWindow, QMessageBox, QProgressBar,
-    QPushButton, QVBoxLayout, QWidget,
-)
 
 # 延迟导入，GUI 启动时不加载 markitdown
 _md = None
@@ -119,8 +131,9 @@ class ConvertWorker(QThread):
         self.output_dir = output_dir
 
     def run(self):
-        # 启用文件日志
-        log = _get_logger(self.output_dir)
+        # 日志写入应用根目录的 logs/ 文件夹
+        log_dir = os.path.join(_get_app_dir(), "logs")
+        log = _get_logger(log_dir)
         results = []
         total = len(self.file_paths)
         try:
@@ -219,6 +232,12 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("PortableConverterMD")
         self.resize(620, 480)
+
+        # 窗口图标
+        icon_path = os.path.join(_get_app_dir(), "ZENO.png")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+
         self.file_paths: list[str] = []
         self.output_dir: str = ""
         self.worker: ConvertWorker | None = None
@@ -358,7 +377,8 @@ class MainWindow(QMainWindow):
             for r in failed:
                 fname = os.path.basename(r["file"])
                 msg += f"\n  • {fname}: {r['error']}"
-            msg += "\n\n详细日志见 conversion.log"
+            log_path = os.path.join(_get_app_dir(), "logs", "conversion.log")
+            msg += f"\n\n详细日志见：{log_path}"
 
         box = QMessageBox(self)
         box.setWindowTitle("转换完成")
@@ -367,7 +387,7 @@ class MainWindow(QMainWindow):
         if failed:
             box.setStandardButtons(QMessageBox.Ok)
             box.setDetailedText(
-                "完整日志文件：" + os.path.join(self.output_dir, "conversion.log")
+                "完整日志文件：" + os.path.join(_get_app_dir(), "logs", "conversion.log")
             )
         box.exec()
 
@@ -383,7 +403,6 @@ class MainWindow(QMainWindow):
 
 
 def main():
-    import sys
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
 
