@@ -10,6 +10,7 @@ installer/
 
 # 环境
 .env
+.superpowers/
 
 # 测试
 .pytest_cache/
@@ -24,3 +25,6 @@ installer/
 *.png
 *.jpg
 !o.jpg
+ZENO.png
+
+.gitignore
