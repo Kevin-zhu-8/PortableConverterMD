@@ -406,6 +406,20 @@ def main():
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
 
+    # 应用图标（窗口 + 任务栏）
+    icon_path = os.path.join(_get_app_dir(), "ZENO.png")
+    if os.path.exists(icon_path):
+        icon = QIcon(icon_path)
+        app.setWindowIcon(icon)
+
+    # Windows 任务栏标识
+    if sys.platform == "win32":
+        try:
+            from PySide6.QtWin import setCurrentProcessExplicitAppUserModelID
+            setCurrentProcessExplicitAppUserModelID("PortableConverterMD")
+        except ImportError:
+            pass
+
     # 全局字体
     font = QFont("Microsoft YaHei", 10)
     app.setFont(font)
