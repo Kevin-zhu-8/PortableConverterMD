@@ -1,10 +1,25 @@
+# Python
 __pycache__/
 *.pyc
+*.egg-info/
+
+# 构建产物
 build/
 dist/
-*.egg-info/
+installer/
+
+# 环境
 .env
+
+# 测试
 .pytest_cache/
+
+# 日志与学习记录
 .learnings/
-.iss
-.png
+
+# IDE / 工具
+.superpowers/
+
+# 资源（保留应用图标）
+*.png
+!ZENO.png
