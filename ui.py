@@ -4,9 +4,9 @@ import os
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QDragEnterEvent, QDropEvent, QIcon
 from PySide6.QtWidgets import (
-    QFileDialog, QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
-    QMainWindow, QMessageBox, QProgressBar, QPushButton, QVBoxLayout,
-    QWidget,
+    QDialog, QDialogButtonBox, QFileDialog, QFrame, QHBoxLayout,
+    QLabel, QListWidget, QListWidgetItem, QMainWindow, QMessageBox,
+    QProgressBar, QPushButton, QScrollArea, QSizePolicy, QVBoxLayout, QWidget,
 )
 
 from converter import get_app_dir
@@ -194,6 +194,141 @@ class DropZone(QWidget):
         )
         if files:
             self.files_dropped.emit(files)
+
+
+# ------------------------------------------------------------
+# 完成弹窗
+# ------------------------------------------------------------
+
+
+class _CompletionDialog(QDialog):
+    """美观的转换完成弹窗。"""
+
+    def __init__(self, output_dir: str, success: int, failed: list, total: int, parent=None):
+        super().__init__(parent)
+        self.output_dir = output_dir
+        self.setWindowTitle("转换完成")
+        self.setMinimumWidth(420)
+        self.setMaximumWidth(520)
+        self.setStyleSheet("""
+            QDialog {
+                background: white;
+            }
+            QLabel#headerIcon {
+                font-size: 40px;
+            }
+            QLabel#headerTitle {
+                font-size: 18px;
+                font-weight: bold;
+                color: #303133;
+            }
+            QLabel#headerSub {
+                font-size: 13px;
+                color: #909399;
+            }
+            QLabel#failTitle {
+                font-size: 13px;
+                font-weight: bold;
+                color: #e74c3c;
+            }
+            QLabel#failItem {
+                font-size: 12px;
+                color: #606266;
+                padding: 4px 8px;
+            }
+            QLabel#outputPath {
+                font-size: 12px;
+                color: #909399;
+                padding: 8px;
+                background: #f5f6f8;
+                border-radius: 6px;
+            }
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(12)
+        layout.setContentsMargins(24, 24, 24, 20)
+
+        # --- 头部 ---
+        has_failure = len(failed) > 0
+        icon_text = "✓" if not has_failure else "!"
+        icon_color = "#52c41a" if not has_failure else "#faad14"
+
+        header_icon = QLabel(icon_text)
+        header_icon.setObjectName("headerIcon")
+        header_icon.setAlignment(Qt.AlignCenter)
+        header_icon.setStyleSheet(f"font-size: 44px; color: {icon_color}; font-weight: bold;")
+        layout.addWidget(header_icon)
+
+        header_title = QLabel("全部完成" if not has_failure else "部分文件失败")
+        header_title.setObjectName("headerTitle")
+        header_title.setAlignment(Qt.AlignCenter)
+        layout.addWidget(header_title)
+
+        header_sub = QLabel(f"{success}/{total} 个文件转换成功")
+        header_sub.setObjectName("headerSub")
+        header_sub.setAlignment(Qt.AlignCenter)
+        layout.addWidget(header_sub)
+
+        # --- 分隔线 ---
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setStyleSheet("background: #ebeef5; max-height: 1px;")
+        layout.addWidget(line)
+
+        # --- 失败详情 ---
+        if has_failure:
+            fail_title = QLabel(f"失败详情（{len(failed)} 个）")
+            fail_title.setObjectName("failTitle")
+            layout.addWidget(fail_title)
+
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setMaximumHeight(140)
+            scroll.setStyleSheet("QScrollArea { border: 1px solid #ebeef5; border-radius: 6px; }")
+            fail_widget = QWidget()
+            fail_layout = QVBoxLayout(fail_widget)
+            fail_layout.setSpacing(2)
+            fail_layout.setContentsMargins(8, 8, 8, 8)
+            for r in failed:
+                fname = os.path.basename(r["file"])
+                lbl = QLabel(f"✗ {fname}")
+                lbl.setObjectName("failItem")
+                lbl.setToolTip(r["error"])
+                fail_layout.addWidget(lbl)
+            fail_layout.addStretch()
+            scroll.setWidget(fail_widget)
+            layout.addWidget(scroll)
+        else:
+            # 全部成功时不占多余空间
+            spacer = QWidget()
+            spacer.setFixedHeight(4)
+            layout.addWidget(spacer)
+
+        # --- 输出路径 ---
+        out_lbl = QLabel(f"输出目录：{output_dir}")
+        out_lbl.setObjectName("outputPath")
+        out_lbl.setWordWrap(True)
+        layout.addWidget(out_lbl)
+
+        # --- 按钮 ---
+        btn_box = QDialogButtonBox()
+        btn_open = QPushButton("打开输出目录")
+        btn_open.setObjectName("btnConvert")
+        btn_open.setMinimumHeight(36)
+        btn_open.clicked.connect(self._open_and_close)
+        btn_close = QPushButton("关闭")
+        btn_close.setObjectName("btnOpenDir")
+        btn_close.setMinimumHeight(36)
+        btn_close.clicked.connect(self.accept)
+        btn_box.addButton(btn_open, QDialogButtonBox.ActionRole)
+        btn_box.addButton(btn_close, QDialogButtonBox.RejectRole)
+        layout.addWidget(btn_box)
+
+    def _open_and_close(self):
+        if self.output_dir and os.path.isdir(self.output_dir):
+            os.startfile(self.output_dir)
+        self.accept()
 
 
 # ------------------------------------------------------------
@@ -433,25 +568,8 @@ class MainWindow(QMainWindow):
         self.btn_open_dir.setEnabled(True)
         self.btn_convert.setEnabled(True)
 
-        msg = f"成功转换 {success}/{total} 个文件。\n输出目录：{self.output_dir}"
-        if failed:
-            msg += "\n\n失败文件："
-            for r in failed:
-                fname = os.path.basename(r["file"])
-                msg += f"\n  * {fname}: {r['error']}"
-            log_path = os.path.join(get_app_dir(), "logs", "conversion.log")
-            msg += f"\n\n详细日志见：{log_path}"
-
-        box = QMessageBox(self)
-        box.setWindowTitle("转换完成")
-        box.setText(msg)
-        box.setIcon(QMessageBox.Warning if failed else QMessageBox.Information)
-        if failed:
-            box.setStandardButtons(QMessageBox.Ok)
-            box.setDetailedText(
-                "完整日志文件：" + os.path.join(get_app_dir(), "logs", "conversion.log")
-            )
-        box.exec()
+        dlg = _CompletionDialog(self.output_dir, success, failed, total, self)
+        dlg.exec()
 
     def _open_output_dir(self):
         if self.output_dir and os.path.isdir(self.output_dir):
