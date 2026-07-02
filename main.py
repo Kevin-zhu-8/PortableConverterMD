@@ -157,63 +157,73 @@ class ConvertWorker(QThread):
 # ============================================================
 
 
-class DropZone(QLabel):
+class DropZone(QWidget):
     """拖拽区域：支持拖入文件或点击选择。"""
     files_dropped = Signal(list)
 
+    STYLE_NORMAL = """
+        QWidget#dropZone {
+            border: 2px dashed #c0c4cc;
+            border-radius: 16px;
+            background: qlineargradient(x1:0 y1:0, x2:0 y2:1,
+                stop:0 #fafbfc, stop:1 #f0f2f5);
+        }
+        QLabel { border: none; background: transparent; }
+    """
+    STYLE_DRAG = """
+        QWidget#dropZone {
+            border: 2px solid #4a90d9;
+            border-radius: 16px;
+            background: qlineargradient(x1:0 y1:0, x2:0 y2:1,
+                stop:0 #e8f0fe, stop:1 #d4e4fc);
+        }
+        QLabel { border: none; background: transparent; }
+    """
+
     def __init__(self):
         super().__init__()
-        self.setText("📁  拖拽文件到此处（或点击选择）")
-        self.setAlignment(Qt.AlignCenter)
+        self.setObjectName("dropZone")
         self.setAcceptDrops(True)
-        self.setMinimumHeight(100)
-        self.setStyleSheet("""
-            DropZone {
-                border: 2px dashed #aaa;
-                border-radius: 12px;
-                background: #f8f9fa;
-                font-size: 14px;
-                color: #666;
-            }
-            DropZone:hover {
-                border-color: #4a90d9;
-                background: #e8f0fe;
-            }
-        """)
+        self.setAttribute(Qt.WA_StyledBackground, True)
+        self.setMinimumHeight(130)
+        self.setCursor(Qt.PointingHandCursor)
+
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setSpacing(4)
+
+        self.icon_label = QLabel("⬇")
+        self.icon_label.setAlignment(Qt.AlignCenter)
+        self.icon_label.setStyleSheet("font-size: 30px; color: #5b9bd5;")
+
+        self.text_label = QLabel("拖拽文件到此处")
+        self.text_label.setAlignment(Qt.AlignCenter)
+        self.text_label.setObjectName("dropText")
+        self.text_label.setStyleSheet("font-size: 15px; font-weight: bold; color: #303133;")
+
+        self.hint_label = QLabel("或点击选择文件")
+        self.hint_label.setAlignment(Qt.AlignCenter)
+        self.hint_label.setObjectName("dropHint")
+        self.hint_label.setStyleSheet("font-size: 12px; color: #909399;")
+
+        layout.addWidget(self.icon_label)
+        layout.addWidget(self.text_label)
+        layout.addWidget(self.hint_label)
+        self.setStyleSheet(self.STYLE_NORMAL)
 
     def dragEnterEvent(self, event: QDragEnterEvent):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
-            self.setStyleSheet("""
-                DropZone {
-                    border: 2px solid #4a90d9;
-                    border-radius: 12px;
-                    background: #d4e4fc;
-                    font-size: 14px;
-                    color: #333;
-                }
-            """)
+            self.setStyleSheet(self.STYLE_DRAG)
 
     def dragLeaveEvent(self, event):
-        self.setStyleSheet("""
-            DropZone {
-                border: 2px dashed #aaa;
-                border-radius: 12px;
-                background: #f8f9fa;
-                font-size: 14px;
-                color: #666;
-            }
-            DropZone:hover {
-                border-color: #4a90d9;
-                background: #e8f0fe;
-            }
-        """)
+        self.setStyleSheet(self.STYLE_NORMAL)
 
     def dropEvent(self, event: QDropEvent):
         files = [url.toLocalFile() for url in event.mimeData().urls()]
         if files:
             self.files_dropped.emit(files)
-        self.dragLeaveEvent(None)
+        self.setStyleSheet(self.STYLE_NORMAL)
 
     def mousePressEvent(self, event):
         """点击打开文件选择对话框。"""
@@ -262,48 +272,64 @@ class MainWindow(QMainWindow):
         # --- 文件列表操作栏 ---
         btn_row = QHBoxLayout()
         self.btn_clear = QPushButton("清空列表")
+        self.btn_clear.setObjectName("btnClear")
         self.btn_clear.clicked.connect(self._clear_files)
         self.btn_clear.setEnabled(False)
         btn_row.addWidget(self.btn_clear)
         btn_row.addStretch()
         self.lbl_count = QLabel("0 个文件")
+        self.lbl_count.setObjectName("lblCount")
         btn_row.addWidget(self.lbl_count)
         layout.addLayout(btn_row)
 
         # --- 状态 ---
         self.lbl_status = QLabel("就绪")
+        self.lbl_status.setObjectName("lblStatus")
         layout.addWidget(self.lbl_status)
 
         # --- 进度条 ---
         self.progress = QProgressBar()
         self.progress.setVisible(False)
+        self.progress.setTextVisible(False)
         layout.addWidget(self.progress)
 
         # --- 操作按钮 ---
         action_row = QHBoxLayout()
         self.btn_convert = QPushButton("开始转换")
+        self.btn_convert.setObjectName("btnConvert")
         self.btn_convert.clicked.connect(self._start_conversion)
         self.btn_convert.setEnabled(False)
-        self.btn_convert.setMinimumHeight(40)
+        self.btn_convert.setMinimumHeight(42)
         action_row.addWidget(self.btn_convert)
 
         self.btn_open_dir = QPushButton("打开输出目录")
+        self.btn_open_dir.setObjectName("btnOpenDir")
         self.btn_open_dir.clicked.connect(self._open_output_dir)
         self.btn_open_dir.setEnabled(False)
-        self.btn_open_dir.setMinimumHeight(40)
+        self.btn_open_dir.setMinimumHeight(42)
         action_row.addWidget(self.btn_open_dir)
         layout.addLayout(action_row)
 
     # ---- 文件管理 ----
 
     def _add_files(self, paths: list[str]):
-        """添加文件到列表，去重，默认勾选。"""
+        """添加文件到列表，去重，默认勾选，显示文件大小。"""
         for path in paths:
             if path not in self.file_paths:
                 self.file_paths.append(path)
-                item = QListWidgetItem(os.path.basename(path))
+                # 文件名 + 大小
+                fname = os.path.basename(path)
+                size = os.path.getsize(path)
+                if size < 1024:
+                    size_str = f"{size} B"
+                elif size < 1024 * 1024:
+                    size_str = f"{size / 1024:.1f} KB"
+                else:
+                    size_str = f"{size / 1024 / 1024:.1f} MB"
+                item = QListWidgetItem(f"{fname}    {size_str}")
                 item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                 item.setCheckState(Qt.Checked)
+                item.setToolTip(path)
                 self.file_list.addItem(item)
         self._update_ui()
 
@@ -405,6 +431,103 @@ class MainWindow(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
+
+    # ---- 全局样式表 ----
+    app.setStyleSheet("""
+        QMainWindow {
+            background: #f5f6f8;
+        }
+        QListWidget {
+            border: 1px solid #e0e3e8;
+            border-radius: 8px;
+            background: white;
+            padding: 4px;
+            font-size: 13px;
+            outline: none;
+        }
+        QListWidget::item {
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 1px 0;
+        }
+        QListWidget::item:selected {
+            background: #f0f5ff;
+            color: #303133;
+        }
+        QListWidget::item:hover {
+            background: #f5f7fa;
+        }
+        QListWidget::indicator {
+            width: 16px;
+            height: 16px;
+        }
+        QPushButton {
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-size: 13px;
+            font-weight: bold;
+            border: none;
+        }
+        QPushButton#btnConvert {
+            background: #4a90d9;
+            color: white;
+        }
+        QPushButton#btnConvert:hover {
+            background: #357abd;
+        }
+        QPushButton#btnConvert:pressed {
+            background: #2a6cb8;
+        }
+        QPushButton#btnConvert:disabled {
+            background: #c8d6e5;
+            color: #a0a8b4;
+        }
+        QPushButton#btnOpenDir {
+            background: white;
+            color: #4a90d9;
+            border: 1px solid #4a90d9;
+        }
+        QPushButton#btnOpenDir:hover {
+            background: #e8f0fe;
+        }
+        QPushButton#btnOpenDir:disabled {
+            background: white;
+            color: #c0c4cc;
+            border-color: #c0c4cc;
+        }
+        QPushButton#btnClear {
+            background: transparent;
+            color: #909399;
+            font-weight: normal;
+            padding: 4px 12px;
+        }
+        QPushButton#btnClear:hover {
+            color: #e74c3c;
+            background: #fef0f0;
+        }
+        QProgressBar {
+            border: none;
+            border-radius: 6px;
+            background: #e8ecf0;
+            height: 8px;
+            text-align: center;
+            font-size: 11px;
+            color: #606266;
+        }
+        QProgressBar::chunk {
+            border-radius: 6px;
+            background: qlineargradient(x1:0 y1:0, x2:1 y2:0,
+                stop:0 #4a90d9, stop:1 #5ba0e8);
+        }
+        QLabel#lblStatus {
+            color: #606266;
+            font-size: 12px;
+        }
+        QLabel#lblCount {
+            color: #909399;
+            font-size: 12px;
+        }
+    """)
 
     # 应用图标（窗口 + 任务栏）
     icon_path = os.path.join(_get_app_dir(), "o.jpg")
