@@ -215,6 +215,7 @@ class MainWindow(QMainWindow):
 
         self.file_paths: list[str] = []
         self.output_dir: str = ""
+        self.custom_output_dir: str = ""  # 用户自定义输出目录
         self.worker: ConvertWorker | None = None
 
         # 中央组件
@@ -251,6 +252,34 @@ class MainWindow(QMainWindow):
         self.lbl_status = QLabel("就绪")
         self.lbl_status.setObjectName("lblStatus")
         layout.addWidget(self.lbl_status)
+
+        # 输出目录选择
+        out_row = QHBoxLayout()
+        self.lbl_output = QLabel("输出目录：默认（源文件旁 md_output）")
+        self.lbl_output.setObjectName("lblOutput")
+        self.lbl_output.setStyleSheet("color: #909399; font-size: 12px;")
+        out_row.addWidget(self.lbl_output)
+        out_row.addStretch()
+        self.btn_choose_dir = QPushButton("更改目录")
+        self.btn_choose_dir.setObjectName("btnChooseDir")
+        self.btn_choose_dir.clicked.connect(self._choose_output_dir)
+        self.btn_choose_dir.setStyleSheet("""
+            QPushButton#btnChooseDir {
+                background: transparent;
+                color: #4a90d9;
+                font-weight: normal;
+                font-size: 12px;
+                padding: 2px 10px;
+                border: 1px solid #d0d5dd;
+                border-radius: 4px;
+            }
+            QPushButton#btnChooseDir:hover {
+                background: #e8f0fe;
+                border-color: #4a90d9;
+            }
+        """)
+        out_row.addWidget(self.btn_choose_dir)
+        layout.addLayout(out_row)
 
         # 进度条
         self.progress = QProgressBar()
@@ -301,6 +330,14 @@ class MainWindow(QMainWindow):
         self.file_paths.clear()
         self._update_ui()
 
+    def _choose_output_dir(self):
+        """弹出文件夹选择对话框，设置自定义输出目录。"""
+        chosen = QFileDialog.getExistingDirectory(self, "选择输出目录")
+        if chosen:
+            self.custom_output_dir = chosen
+            self.lbl_output.setText(f"输出目录：{chosen}")
+            self.lbl_output.setStyleSheet("color: #303133; font-size: 12px;")
+
     def _update_ui(self):
         count = self.file_list.count()
         self.lbl_count.setText(f"{count} 个文件")
@@ -324,7 +361,11 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "提示", "没有勾选任何文件。")
             return
 
-        self.output_dir = os.path.join(os.path.dirname(checked[0]), "md_output")
+        # 使用自定义目录，否则默认 md_output
+        if self.custom_output_dir:
+            self.output_dir = self.custom_output_dir
+        else:
+            self.output_dir = os.path.join(os.path.dirname(checked[0]), "md_output")
 
         self.btn_convert.setEnabled(False)
         self.btn_open_dir.setEnabled(False)
