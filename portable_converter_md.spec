@@ -9,7 +9,6 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('res/PortableConverterMD.png', 'res'),
         ('res/PortableConverterMD.ico', 'res'),
         ('res/screenshot.png', 'res'),
         ('res/icon_download.svg', 'res'),

@@ -31,7 +31,6 @@ tesseract/
 *.png
 *.jpg
 *.ico
-!res/PortableConverterMD.png
 !res/PortableConverterMD.ico
 !res/screenshot.png
 !settings.json
