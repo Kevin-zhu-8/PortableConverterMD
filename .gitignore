@@ -33,6 +33,5 @@ tesseract/
 *.ico
 !res/PortableConverterMD.ico
 !res/screenshot.png
-!settings.json
 
 .gitignore

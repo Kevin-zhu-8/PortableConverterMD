@@ -13,7 +13,6 @@ a = Analysis(
         ('res/screenshot.png', 'res'),
         ('res/icon_download.svg', 'res'),
         ('tesseract', 'tesseract'),
-        ('settings.json', '.'),
         ('NOTICE', '.'),
         (_os.path.join(_magika_root, 'models'), 'magika/models'),
         (_os.path.join(_magika_root, 'config'), 'magika/config'),

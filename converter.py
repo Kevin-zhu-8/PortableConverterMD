@@ -1,5 +1,4 @@
 """PortableConverterMD — 转换引擎与日志"""
-import json
 import logging
 import os
 import sys
@@ -16,21 +15,6 @@ def get_app_dir() -> str:
     if getattr(sys, 'frozen', False):
         return os.path.dirname(sys.executable)
     return os.path.dirname(os.path.abspath(__file__))
-
-
-def _load_settings() -> dict:
-    """加载 settings.json，返回配置字典。"""
-    path = os.path.join(get_app_dir(), "settings.json")
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-
-def is_log_enabled() -> bool:
-    """读取 settings.json 中 enable_log 字段，默认开启。"""
-    return _load_settings().get("enable_log", True)
 
 
 # ------------------------------------------------------------
@@ -59,8 +43,6 @@ def get_logger(with_file: str = "") -> logging.Logger:
         _logger.addHandler(console)
 
     if with_file:
-        if not is_log_enabled():
-            return _logger
         if _file_handler:
             _file_handler.close()
             _logger.removeHandler(_file_handler)

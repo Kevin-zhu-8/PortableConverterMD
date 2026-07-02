@@ -31,7 +31,7 @@
 - **后台转换** — 多线程处理，实时显示当前处理文件及状态
 - **右键菜单** — 安装后右键任意文件直接转换为 Markdown
 - **自定义输出** — 可指定输出目录，默认输出到源文件旁 `md_output`
-- **可配日志** — `settings.json` 控制日志开关，日志文件可选查看
+- **转换日志** — 转换过程自动记录日志，可随时查看
 
 ## 界面
 
@@ -74,8 +74,7 @@ pyinstaller portable_converter_md.spec
 ├── portable_converter_md.spec       # PyInstaller 配置
 ├── setup.iss                        # Inno Setup 配置
 ├── add_context_menu.reg             # 右键菜单注册表
-├── settings.json                    # 应用设置
-├── res/PortableConverterMD.png          # 应用图标
+├── res/PortableConverterMD.ico          # 应用图标
 ├── res/screenshot.png                   # 界面截图
 ├── tesseract/                       # OCR 引擎（内置）
 └── docs/                            # 设计文档
