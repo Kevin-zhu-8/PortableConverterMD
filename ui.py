@@ -154,7 +154,7 @@ class DropZone(QWidget):
 
         self.icon_label = QLabel()
         self.icon_label.setAlignment(Qt.AlignCenter)
-        svg_path = os.path.join(get_app_dir(), "icon_download.svg")
+        svg_path = os.path.join(get_app_dir(), "res", "icon_download.svg")
         icon = QIcon(svg_path)
         self.icon_label.setPixmap(icon.pixmap(52, 52))
         self.icon_label.setStyleSheet("border: none; background: transparent;")

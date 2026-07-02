@@ -6,7 +6,7 @@ a = Analysis(
     binaries=[],
     datas=[
         ('PortableConverterMD.png', '.'),
-        ('icon_download.svg', '.'),
+        ('res/icon_download.svg', 'res'),
         ('tesseract', 'tesseract'),
         ('settings.json', '.'),
         ('NOTICE', '.'),
