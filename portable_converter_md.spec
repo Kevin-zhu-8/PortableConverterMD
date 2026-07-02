@@ -8,6 +8,7 @@ a = Analysis(
         ('PortableConverterMD.png', '.'),
         ('icon_download.svg', '.'),
         ('tesseract', 'tesseract'),
+        ('settings.json', '.'),
     ],
     hiddenimports=['markitdown', 'markitdown._markitdown'],
     hookspath=[],

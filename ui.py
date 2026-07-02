@@ -331,6 +331,9 @@ class _CompletionDialog(QDialog):
         layout.addWidget(btn_box)
 
     def _open_log(self):
+        from converter import is_log_enabled
+        if not is_log_enabled():
+            return
         log_path = os.path.join(get_app_dir(), "logs", "conversion.log")
         if os.path.exists(log_path):
             os.startfile(log_path)
@@ -593,8 +596,13 @@ class MainWindow(QMainWindow):
 
     def _open_log(self):
         """用系统默认编辑器打开日志文件。"""
+        from converter import is_log_enabled
+        if not is_log_enabled():
+            QMessageBox.information(self, "提示",
+                "日志功能已关闭。\n编辑 settings.json，将 enable_log 设为 true 即可开启。")
+            return
         log_path = os.path.join(get_app_dir(), "logs", "conversion.log")
         if os.path.exists(log_path):
             os.startfile(log_path)
         else:
-            QMessageBox.information(self, "提示", "暂无日志文件。")
+            QMessageBox.information(self, "提示", "暂无日志文件，完成一次转换后生成。")
