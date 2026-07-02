@@ -87,19 +87,28 @@ def _get_converter():
 
 
 def _ocr_pdf(file_path: str) -> str:
-    """对 PDF 逐页 OCR，返回拼接文本。需要安装 Tesseract-OCR。"""
+    """对 PDF 逐页 OCR，返回拼接文本。自动检测项目内的 Tesseract。"""
     try:
         import pytesseract
     except ImportError:
         raise RuntimeError("OCR 需要 pytesseract，请执行 pip install pytesseract")
+
+    # 优先使用项目内置的 Tesseract
+    bundled = os.path.join(get_app_dir(), "tesseract.exe")
+    if os.path.exists(bundled):
+        pytesseract.pytesseract.tesseract_cmd = bundled
+        # 设置 tessdata 目录
+        tessdata_dir = os.path.join(get_app_dir(), "tessdata")
+        if os.path.isdir(tessdata_dir):
+            os.environ.setdefault("TESSDATA_PREFIX", tessdata_dir)
 
     # 检查 tesseract 是否可用
     try:
         pytesseract.get_tesseract_version()
     except Exception:
         raise RuntimeError(
-            "未找到 Tesseract-OCR。请从 https://github.com/UB-Mannheim/tesseract/wiki 下载安装，"
-            "安装时勾选中文语言包。"
+            "未找到 Tesseract-OCR。请将 tesseract.exe 放在程序目录下，或从 "
+            "https://github.com/UB-Mannheim/tesseract/wiki 下载安装。"
         )
 
     import pypdfium2
@@ -111,8 +120,11 @@ def _ocr_pdf(file_path: str) -> str:
             page = pdf[i]
             bitmap = page.render(scale=2)
             img = bitmap.to_pil()
-            # 中英混合 OCR
-            text = pytesseract.image_to_string(img, lang="chi_sim+eng")
+            # 自动检测可用语言（中文优先）
+            lang = "chi_sim+eng" if os.path.exists(
+                os.path.join(tessdata_dir, "chi_sim.traineddata")
+            ) else "eng"
+            text = pytesseract.image_to_string(img, lang=lang)
             if text.strip():
                 pages.append(text.strip())
     finally:

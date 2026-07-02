@@ -52,7 +52,7 @@ def test_convert_same_filename_md_extension():
 
 
 def test_empty_pdf_falls_back_to_ocr():
-    """空内容 PDF 应尝试 OCR 回退（Tesseract 不可用时给出安装提示）"""
+    """空内容 PDF 应尝试 OCR 回退（空白页导致识别失败）"""
     with tempfile.TemporaryDirectory() as tmpdir:
         pdf_path = os.path.join(tmpdir, "empty.pdf")
         with open(pdf_path, "wb") as f:
@@ -65,6 +65,6 @@ def test_empty_pdf_falls_back_to_ocr():
 
         out_dir = os.path.join(tmpdir, "md_output")
 
-        # Tesseract 未安装时抛出相关提示
-        with pytest.raises(RuntimeError, match="Tesseract"):
+        # 内置 Tesseract 可用但空白 PDF 无法 OCR
+        with pytest.raises(RuntimeError, match="未能从 PDF 中识别"):
             convert_file(pdf_path, out_dir)
