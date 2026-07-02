@@ -19,6 +19,7 @@ installer/
 .learnings/
 logs/
 doc/
+docs/
 
 # Tesseract OCR 运行时（不进 git，打包时包含）
 tesseract/
