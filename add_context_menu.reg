@@ -1,0 +1,9 @@
+Windows Registry Editor Version 5.00
+
+; 右键菜单：转换为 Markdown（所有文件类型）
+[HKEY_CLASSES_ROOT\*\shell\ConvertToMarkdown]
+@="转换为 Markdown"
+"Icon"="\"F:\\Project\\Python\\PortableConverterMD\\PortableConverterMD.png\""
+
+[HKEY_CLASSES_ROOT\*\shell\ConvertToMarkdown\command]
+@="\"F:\\Project\\Python\\PortableConverterMD\\dist\\PortableConverterMD\\PortableConverterMD.exe\" \"%1\""

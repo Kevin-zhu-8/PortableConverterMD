@@ -24,6 +24,12 @@ Name: "{autodesktop}\PortableConverterMD"; Filename: "{app}\PortableConverterMD.
 
 [Tasks]
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "其他:"
+Name: "contextmenu"; Description: "添加右键菜单「转换为 Markdown」"; GroupDescription: "其他:"; Flags: checkedonce
+
+[Registry]
+Root: HKCR; Subkey: "*\shell\ConvertToMarkdown"; ValueType: string; ValueName: ""; ValueData: "转换为 Markdown"; Flags: uninsdeletekey; Tasks: contextmenu
+Root: HKCR; Subkey: "*\shell\ConvertToMarkdown"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\PortableConverterMD.png"; Tasks: contextmenu
+Root: HKCR; Subkey: "*\shell\ConvertToMarkdown\command"; ValueType: string; ValueName: ""; ValueData: """{app}\PortableConverterMD.exe"" ""%1"""; Tasks: contextmenu
 
 [Run]
 Filename: "{app}\PortableConverterMD.exe"; Description: "启动 PortableConverterMD"; Flags: nowait postinstall skipifsilent
