@@ -63,6 +63,11 @@ def main():
             return
 
     # GUI 模式
+    # 任务栏图标必须在 QApplication 创建前设置
+    if sys.platform == "win32":
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("PortableConverterMD")
+
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     app.setStyleSheet(GLOBAL_CSS)
@@ -70,13 +75,6 @@ def main():
     icon_path = os.path.join(get_app_dir(), "res", "PortableConverterMD.ico")
     if os.path.exists(icon_path):
         app.setWindowIcon(QIcon(icon_path))
-
-    if sys.platform == "win32":
-        try:
-            from PySide6.QtWin import setCurrentProcessExplicitAppUserModelID
-            setCurrentProcessExplicitAppUserModelID("PortableConverterMD")
-        except ImportError:
-            pass
 
     app.setFont(QFont("Microsoft YaHei", 10))
 
