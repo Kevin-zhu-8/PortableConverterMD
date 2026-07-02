@@ -9,6 +9,7 @@ a = Analysis(
         ('icon_download.svg', '.'),
         ('tesseract', 'tesseract'),
         ('settings.json', '.'),
+        ('NOTICE', '.'),
     ],
     hiddenimports=['markitdown', 'markitdown._markitdown'],
     hookspath=[],

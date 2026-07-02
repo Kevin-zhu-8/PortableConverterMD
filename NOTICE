@@ -1,0 +1,15 @@
+PortableConverterMD 使用了以下开源软件：
+
+---
+
+Tesseract OCR
+https://github.com/tesseract-ocr/tesseract
+
+Copyright (c) Google Inc. and contributors
+Licensed under the Apache License, Version 2.0
+http://www.apache.org/licenses/LICENSE-2.0
+
+Tesseract 的 Windows 二进制分发来自 UB-Mannheim：
+https://github.com/UB-Mannheim/tesseract
+
+---
