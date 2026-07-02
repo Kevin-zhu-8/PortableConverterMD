@@ -51,10 +51,9 @@ def test_convert_same_filename_md_extension():
         assert os.path.basename(result) == "myfile.md"
 
 
-def test_empty_pdf_raises_helpful_error():
-    """空内容 PDF（扫描版）应抛出明确错误提示"""
+def test_empty_pdf_falls_back_to_ocr():
+    """空内容 PDF 应尝试 OCR 回退（Tesseract 不可用时给出安装提示）"""
     with tempfile.TemporaryDirectory() as tmpdir:
-        # 创建一个只有基本结构的空 PDF（无文字内容）
         pdf_path = os.path.join(tmpdir, "empty.pdf")
         with open(pdf_path, "wb") as f:
             f.write(b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
@@ -66,5 +65,6 @@ def test_empty_pdf_raises_helpful_error():
 
         out_dir = os.path.join(tmpdir, "md_output")
 
-        with pytest.raises(RuntimeError, match="扫描版"):
+        # Tesseract 未安装时抛出相关提示
+        with pytest.raises(RuntimeError, match="Tesseract"):
             convert_file(pdf_path, out_dir)

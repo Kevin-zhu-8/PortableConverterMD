@@ -86,6 +86,43 @@ def _get_converter():
     return _md
 
 
+def _ocr_pdf(file_path: str) -> str:
+    """对 PDF 逐页 OCR，返回拼接文本。需要安装 Tesseract-OCR。"""
+    try:
+        import pytesseract
+    except ImportError:
+        raise RuntimeError("OCR 需要 pytesseract，请执行 pip install pytesseract")
+
+    # 检查 tesseract 是否可用
+    try:
+        pytesseract.get_tesseract_version()
+    except Exception:
+        raise RuntimeError(
+            "未找到 Tesseract-OCR。请从 https://github.com/UB-Mannheim/tesseract/wiki 下载安装，"
+            "安装时勾选中文语言包。"
+        )
+
+    import pypdfium2
+
+    pdf = pypdfium2.PdfDocument(file_path)
+    pages = []
+    try:
+        for i in range(len(pdf)):
+            page = pdf[i]
+            bitmap = page.render(scale=2)
+            img = bitmap.to_pil()
+            # 中英混合 OCR
+            text = pytesseract.image_to_string(img, lang="chi_sim+eng")
+            if text.strip():
+                pages.append(text.strip())
+    finally:
+        pdf.close()
+
+    if not pages:
+        raise RuntimeError("OCR 未能从 PDF 中识别出文字。")
+    return "\n\n---\n\n".join(pages)
+
+
 def convert_file(file_path: str, output_dir: str) -> str:
     """转换单个文件为 Markdown，返回输出文件路径。"""
     file_path = str(file_path)
@@ -96,23 +133,21 @@ def convert_file(file_path: str, output_dir: str) -> str:
 
     input_name = Path(file_path).stem
     output_path = os.path.join(output_dir, f"{input_name}.md")
+    ext = Path(file_path).suffix.lower()
 
     log.info(f"开始转换: {os.path.basename(file_path)}")
 
     converter = _get_converter()
     result = converter.convert(file_path)
-
-    # 检测空结果（常见于扫描版 PDF）
     text = result.text_content.strip()
-    ext = Path(file_path).suffix.lower()
+
+    # PDF 空结果：尝试 OCR 回退
     if not text and ext == ".pdf":
-        raise RuntimeError(
-            "PDF 转换结果为空，可能是扫描版/图片型 PDF（不含文字层）。"
-            "请使用带 OCR 的工具先识别文字，或将 PDF 打印为可搜索 PDF 后再试。"
-        )
+        log.info("文本提取为空，尝试 OCR…")
+        text = _ocr_pdf(file_path)
 
     with open(output_path, "w", encoding="utf-8") as f:
-        f.write(result.text_content)
+        f.write(text)
 
     log.info(f"转换成功: {os.path.basename(file_path)} → {os.path.basename(output_path)}")
     return output_path
