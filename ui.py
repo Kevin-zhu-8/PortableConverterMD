@@ -357,7 +357,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("PortableConverterMD")
         self.resize(620, 480)
 
-        icon_path = os.path.join(get_app_dir(), "PortableConverterMD.png")
+        icon_path = os.path.join(get_app_dir(), "res/PortableConverterMD.png")
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
 

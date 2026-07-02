@@ -30,8 +30,8 @@ tesseract/
 # 资源（保留特定文件）
 *.png
 *.jpg
-!PortableConverterMD.png
-!screenshot.png
+!res/PortableConverterMD.png
+!res/screenshot.png
 !settings.json
 
 .gitignore

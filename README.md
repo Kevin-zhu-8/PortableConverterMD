@@ -36,7 +36,7 @@
 ## 界面
 
 <p align="center">
-  <img src="screenshot.png" width="560" alt="PortableConverterMD 界面截图">
+  <img src="res/screenshot.png" width="560" alt="PortableConverterMD 界面截图">
 </p>
 
 ## 使用
@@ -75,8 +75,8 @@ pyinstaller portable_converter_md.spec
 ├── setup.iss                        # Inno Setup 配置
 ├── add_context_menu.reg             # 右键菜单注册表
 ├── settings.json                    # 应用设置
-├── PortableConverterMD.png          # 应用图标
-├── screenshot.png                   # 界面截图
+├── res/PortableConverterMD.png          # 应用图标
+├── res/screenshot.png                   # 界面截图
 ├── tesseract/                       # OCR 引擎（内置）
 └── docs/                            # 设计文档
 ```

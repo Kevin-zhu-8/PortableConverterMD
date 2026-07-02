@@ -5,7 +5,8 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('PortableConverterMD.png', '.'),
+        ('res/PortableConverterMD.png', 'res'),
+        ('res/screenshot.png', 'res'),
         ('res/icon_download.svg', 'res'),
         ('tesseract', 'tesseract'),
         ('settings.json', '.'),
@@ -36,7 +37,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='PortableConverterMD.png',
+    icon='res/PortableConverterMD.png',
 )
 
 coll = COLLECT(
