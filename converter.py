@@ -149,14 +149,14 @@ def convert_file(file_path: str, output_dir: str) -> str:
 
     log.info(f"开始转换: {os.path.basename(file_path)}")
 
-    converter = _get_converter()
-    result = converter.convert(file_path)
-    text = result.text_content.strip()
-
-    # PDF 空结果：尝试 OCR 回退
-    if not text and ext == ".pdf":
-        log.info("文本提取为空，尝试 OCR…")
+    # PDF 直接走 OCR，更快
+    if ext == ".pdf":
+        log.info("PDF 文件，直接使用 OCR…")
         text = _ocr_pdf(file_path)
+    else:
+        converter = _get_converter()
+        result = converter.convert(file_path)
+        text = result.text_content.strip()
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(text)

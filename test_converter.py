@@ -51,8 +51,8 @@ def test_convert_same_filename_md_extension():
         assert os.path.basename(result) == "myfile.md"
 
 
-def test_empty_pdf_falls_back_to_ocr():
-    """空内容 PDF 应尝试 OCR 回退（空白页导致识别失败）"""
+def test_pdf_goes_direct_to_ocr():
+    """PDF 文件直接走 OCR（空白页导致识别失败）"""
     with tempfile.TemporaryDirectory() as tmpdir:
         pdf_path = os.path.join(tmpdir, "empty.pdf")
         with open(pdf_path, "wb") as f:
