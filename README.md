@@ -18,7 +18,7 @@
 
 | 版本 | 说明 |
 |---|---|
-| [PortableConverterMD-Setup.exe]() | 安装包（推荐）— 开始菜单、桌面快捷方式、自动关联 |
+| [PortableConverterMD-Setup.exe]() | 安装包（推荐）— 开始菜单、右键菜单、桌面快捷方式 |
 | [PortableConverterMD.zip]() | 绿色免安装版 — 解压即用 |
 
 ---
@@ -27,9 +27,11 @@
 
 - **拖拽即用** — 拖入文件或点击选择，批量转换
 - **全格式覆盖** — Office（Word/Excel/PPT）、PDF、图片、HTML、CSV、JSON、XML、音频、ZIP
-- **后台转换** — 多线程处理，界面不卡顿
-- **进度可见** — 实时进度条 + 状态提示
-- **错误追踪** — 失败文件弹窗提示原因，详细日志输出到 `logs/conversion.log`
+- **扫描件 OCR** — 内置 Tesseract，扫描版 PDF 自动识别文字（中英双语）
+- **后台转换** — 多线程处理，实时显示当前处理文件及状态
+- **右键菜单** — 安装后右键任意文件直接转换为 Markdown
+- **自定义输出** — 可指定输出目录，默认输出到源文件旁 `md_output`
+- **可配日志** — `settings.json` 控制日志开关，日志文件可选查看
 
 ## 界面
 
@@ -40,26 +42,30 @@
 ## 使用
 
 ```bash
-# 安装依赖
 pip install -r requirements.txt
-
-# 直接运行
 python main.py
+```
+
+支持命令行模式：
+
+```bash
+PortableConverterMD.exe "C:\path\to\file.pdf"
 ```
 
 ## 打包
 
 ```bash
-# 绿色免安装版（文件夹，启动快）
+# 绿色免安装版
 pyinstaller portable_converter_md.spec
-```
 
-`dist/PortableConverterMD/` 文件夹双击 `PortableConverterMD.exe` 即用。
+# 安装包（需要 Inno Setup）
+# 用 Inno Setup 打开 setup.iss 编译
+```
 
 ## 项目结构
 
 ```
-├── main.py                          # 入口
+├── main.py                          # 入口（GUI + CLI）
 ├── converter.py                     # 转换引擎 + OCR
 ├── worker.py                        # 后台线程
 ├── ui.py                            # GUI 界面
@@ -67,6 +73,7 @@ pyinstaller portable_converter_md.spec
 ├── requirements.txt                 # Python 依赖
 ├── portable_converter_md.spec       # PyInstaller 配置
 ├── setup.iss                        # Inno Setup 配置
+├── add_context_menu.reg             # 右键菜单注册表
 ├── settings.json                    # 应用设置
 ├── PortableConverterMD.png          # 应用图标
 ├── screenshot.png                   # 界面截图
@@ -80,6 +87,7 @@ pyinstaller portable_converter_md.spec
 |---|---|
 | [markitdown](https://github.com/microsoft/markitdown) | 文件 → Markdown 核心引擎 |
 | [PySide6](https://pypi.org/project/PySide6/) | Qt 桌面框架 |
+| [Tesseract-OCR](https://github.com/UB-Mannheim/tesseract) | 扫描件 PDF 文字识别（内置） |
 | [pyinstaller](https://pyinstaller.org/) | 打包为独立程序 |
 
 ## 许可证
