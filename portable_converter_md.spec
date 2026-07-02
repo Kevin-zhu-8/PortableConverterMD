@@ -18,11 +18,11 @@ a = Analysis(
         (_os.path.join(_magika_root, 'models'), 'magika/models'),
         (_os.path.join(_magika_root, 'config'), 'magika/config'),
     ],
-    hiddenimports=['markitdown', 'markitdown._markitdown', 'magika'],
+    hiddenimports=['markitdown', 'markitdown._markitdown', 'magika', 'pytesseract', 'PIL'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['matplotlib', 'numba', 'scipy', 'PIL', 'cv2', 'notebook', 'ipykernel'],
+    excludes=['matplotlib', 'numba', 'scipy', 'cv2', 'notebook', 'ipykernel'],
     noarchive=False,
 )
 
