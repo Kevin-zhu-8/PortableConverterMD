@@ -317,13 +317,23 @@ class _CompletionDialog(QDialog):
         btn_open.setObjectName("btnConvert")
         btn_open.setMinimumHeight(36)
         btn_open.clicked.connect(self._open_and_close)
+        btn_log = QPushButton("查看日志")
+        btn_log.setObjectName("btnClear")
+        btn_log.setMinimumHeight(36)
+        btn_log.clicked.connect(self._open_log)
         btn_close = QPushButton("关闭")
         btn_close.setObjectName("btnOpenDir")
         btn_close.setMinimumHeight(36)
         btn_close.clicked.connect(self.accept)
         btn_box.addButton(btn_open, QDialogButtonBox.ActionRole)
+        btn_box.addButton(btn_log, QDialogButtonBox.ActionRole)
         btn_box.addButton(btn_close, QDialogButtonBox.RejectRole)
         layout.addWidget(btn_box)
+
+    def _open_log(self):
+        log_path = os.path.join(get_app_dir(), "logs", "conversion.log")
+        if os.path.exists(log_path):
+            os.startfile(log_path)
 
     def _open_and_close(self):
         if self.output_dir and os.path.isdir(self.output_dir):
@@ -438,6 +448,12 @@ class MainWindow(QMainWindow):
         self.btn_open_dir.setEnabled(False)
         self.btn_open_dir.setMinimumHeight(42)
         action_row.addWidget(self.btn_open_dir)
+
+        self.btn_log = QPushButton("查看日志")
+        self.btn_log.setObjectName("btnClear")
+        self.btn_log.clicked.connect(self._open_log)
+        self.btn_log.setMinimumHeight(42)
+        action_row.addWidget(self.btn_log)
         layout.addLayout(action_row)
 
     # ---- 文件管理 ----
@@ -574,3 +590,11 @@ class MainWindow(QMainWindow):
     def _open_output_dir(self):
         if self.output_dir and os.path.isdir(self.output_dir):
             os.startfile(self.output_dir)
+
+    def _open_log(self):
+        """用系统默认编辑器打开日志文件。"""
+        log_path = os.path.join(get_app_dir(), "logs", "conversion.log")
+        if os.path.exists(log_path):
+            os.startfile(log_path)
+        else:
+            QMessageBox.information(self, "提示", "暂无日志文件。")
