@@ -2,7 +2,7 @@
 import os
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QDragEnterEvent, QDropEvent, QIcon
+from PySide6.QtGui import QColor, QDragEnterEvent, QDropEvent, QIcon
 from PySide6.QtWidgets import (
     QFileDialog, QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
     QMainWindow, QMessageBox, QProgressBar, QPushButton, QVBoxLayout,
@@ -214,8 +214,9 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QIcon(icon_path))
 
         self.file_paths: list[str] = []
+        self.file_items: dict[str, QListWidgetItem] = {}  # path → item
         self.output_dir: str = ""
-        self.custom_output_dir: str = ""  # 用户自定义输出目录
+        self.custom_output_dir: str = ""
         self.worker: ConvertWorker | None = None
 
         # 中央组件
@@ -318,17 +319,34 @@ class MainWindow(QMainWindow):
                     size_str = f"{size / 1024:.1f} KB"
                 else:
                     size_str = f"{size / 1024 / 1024:.1f} MB"
-                item = QListWidgetItem(f"{fname}    {size_str}")
+                item = QListWidgetItem(f"  {fname}    {size_str}")
                 item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                 item.setCheckState(Qt.Checked)
                 item.setToolTip(path)
                 self.file_list.addItem(item)
+                self.file_items[path] = item
         self._update_ui()
 
     def _clear_files(self):
         self.file_list.clear()
         self.file_paths.clear()
+        self.file_items.clear()
         self._update_ui()
+
+    def _update_item_status(self, path: str, status: str):
+        """更新文件列表项的状态图标。"""
+        item = self.file_items.get(path)
+        if not item:
+            return
+        fname = os.path.basename(path)
+        size = os.path.getsize(path)
+        if size < 1024:
+            size_str = f"{size} B"
+        elif size < 1024 * 1024:
+            size_str = f"{size / 1024:.1f} KB"
+        else:
+            size_str = f"{size / 1024 / 1024:.1f} MB"
+        item.setText(f"{status} {fname}    {size_str}")
 
     def _choose_output_dir(self):
         """弹出文件夹选择对话框，设置自定义输出目录。"""
@@ -374,9 +392,32 @@ class MainWindow(QMainWindow):
         self.progress.setMaximum(len(checked))
 
         self.worker = ConvertWorker(checked, self.output_dir)
+        self.worker.file_started.connect(self._on_file_started)
+        self.worker.file_finished.connect(self._on_file_finished)
         self.worker.progress_updated.connect(self._on_progress)
         self.worker.conversion_done.connect(self._on_done)
         self.worker.start()
+
+    def _on_file_started(self, fname: str):
+        """文件开始转换时高亮列表项。"""
+        for path, item in self.file_items.items():
+            if os.path.basename(path) == fname:
+                item.setText(f"⟳ {fname}    转换中…")
+                item.setForeground(QColor("#4a90d9"))
+                self.file_list.scrollToItem(item)
+        self.lbl_status.setText(f"正在处理：{fname}")
+
+    def _on_file_finished(self, fname: str, success: bool, error: str):
+        """单个文件完成时标记状态。"""
+        for path, item in self.file_items.items():
+            if os.path.basename(path) == fname:
+                if success:
+                    item.setText(f"✓ {fname}")
+                    item.setForeground(QColor("#52c41a"))
+                else:
+                    item.setText(f"✗ {fname}")
+                    item.setForeground(QColor("#e74c3c"))
+                    item.setToolTip(error)
 
     def _on_progress(self, current: int, total: int):
         self.progress.setValue(current)
