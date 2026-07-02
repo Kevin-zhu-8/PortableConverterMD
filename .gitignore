@@ -17,15 +17,15 @@ installer/
 
 # 日志与学习记录
 .learnings/
+logs/
+doc/
 
-# Tesseract OCR 运行时（打包时包含，不进 git）
+# Tesseract OCR 运行时（不进 git，打包时包含）
 tesseract.exe
-tesseract_installer.exe
-tesseract-uninstall.exe
-libtesseract-5.dll
-tesseract.1.html
+tesseract*.exe
+*.dll
+libtesseract*
 tessdata/
-tesseract_bin/
 
 # IDE / 工具
 .superpowers/
