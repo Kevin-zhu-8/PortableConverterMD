@@ -14,6 +14,15 @@
 
 ---
 
+## 下载
+
+| 版本 | 说明 |
+|---|---|
+| [PortableConverterMD-Setup.exe]() | 安装包（推荐）— 开始菜单、桌面快捷方式、自动关联 |
+| [PortableConverterMD.zip]() | 绿色免安装版 — 解压即用 |
+
+---
+
 ## 特性
 
 - **拖拽即用** — 拖入文件或点击选择，批量转换
@@ -50,12 +59,18 @@ pyinstaller portable_converter_md.spec
 ## 项目结构
 
 ```
-├── main.py                          # 全部源码（单文件）
-├── requirements.txt                 # Python 依赖
-├── portable_converter_md.spec       # PyInstaller 打包配置
-├── setup.iss                        # Inno Setup 安装包配置
-├── o.jpg                         # 应用图标
+├── main.py                          # 入口
+├── converter.py                     # 转换引擎 + OCR
+├── worker.py                        # 后台线程
+├── ui.py                            # GUI 界面
 ├── test_converter.py                # 单元测试
+├── requirements.txt                 # Python 依赖
+├── portable_converter_md.spec       # PyInstaller 配置
+├── setup.iss                        # Inno Setup 配置
+├── settings.json                    # 应用设置
+├── PortableConverterMD.png          # 应用图标
+├── screenshot.png                   # 界面截图
+├── tesseract/                       # OCR 引擎（内置）
 └── docs/                            # 设计文档
 ```
 
