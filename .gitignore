@@ -26,9 +26,10 @@ tesseract/
 # IDE / 工具
 .superpowers/
 
-# 资源（保留应用图标）
+# 资源（保留应用图标和截图）
 *.png
 *.jpg
 !PortableConverterMD.png
+!screenshot.png
 
 .gitignore
