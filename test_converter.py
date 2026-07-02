@@ -49,3 +49,22 @@ def test_convert_same_filename_md_extension():
         result = convert_file(txt_path, out_dir)
 
         assert os.path.basename(result) == "myfile.md"
+
+
+def test_empty_pdf_raises_helpful_error():
+    """空内容 PDF（扫描版）应抛出明确错误提示"""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # 创建一个只有基本结构的空 PDF（无文字内容）
+        pdf_path = os.path.join(tmpdir, "empty.pdf")
+        with open(pdf_path, "wb") as f:
+            f.write(b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+                    b"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+                    b"3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj\n"
+                    b"xref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n"
+                    b"0000000058 00000 n \n0000000115 00000 n \n"
+                    b"trailer<</Size 4/Root 1 0 R>>\nstartxref\n190\n%%EOF")
+
+        out_dir = os.path.join(tmpdir, "md_output")
+
+        with pytest.raises(RuntimeError, match="扫描版"):
+            convert_file(pdf_path, out_dir)

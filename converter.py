@@ -102,6 +102,15 @@ def convert_file(file_path: str, output_dir: str) -> str:
     converter = _get_converter()
     result = converter.convert(file_path)
 
+    # 检测空结果（常见于扫描版 PDF）
+    text = result.text_content.strip()
+    ext = Path(file_path).suffix.lower()
+    if not text and ext == ".pdf":
+        raise RuntimeError(
+            "PDF 转换结果为空，可能是扫描版/图片型 PDF（不含文字层）。"
+            "请使用带 OCR 的工具先识别文字，或将 PDF 打印为可搜索 PDF 后再试。"
+        )
+
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(result.text_content)
 
