@@ -94,11 +94,11 @@ def _ocr_pdf(file_path: str) -> str:
         raise RuntimeError("OCR 需要 pytesseract，请执行 pip install pytesseract")
 
     # 优先使用项目内置的 Tesseract
-    bundled = os.path.join(get_app_dir(), "tesseract.exe")
+    bundled = os.path.join(get_app_dir(), "tesseract", "tesseract.exe")
     if os.path.exists(bundled):
         pytesseract.pytesseract.tesseract_cmd = bundled
         # 设置 tessdata 目录
-        tessdata_dir = os.path.join(get_app_dir(), "tessdata")
+        tessdata_dir = os.path.join(get_app_dir(), "tesseract", "tessdata")
         if os.path.isdir(tessdata_dir):
             os.environ.setdefault("TESSDATA_PREFIX", tessdata_dir)
 

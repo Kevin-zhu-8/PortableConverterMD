@@ -4,12 +4,10 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    binaries=[('libtesseract-5.dll', '.')],
     datas=[
         ('PortableConverterMD.png', '.'),
         ('icon_download.svg', '.'),
-        ('tesseract.exe', '.'),
-        ('tessdata', 'tessdata'),
+        ('tesseract', 'tesseract'),
     ],
     hiddenimports=['markitdown', 'markitdown._markitdown'],
     hookspath=[],
