@@ -13,7 +13,7 @@ from pathlib import Path
 def get_app_dir() -> str:
     """获取应用根目录（源码运行或 PyInstaller 打包均正确）。"""
     if getattr(sys, 'frozen', False):
-        return os.path.dirname(sys.executable)
+        return sys._MEIPASS  # PyInstaller 数据文件所在目录
     return os.path.dirname(os.path.abspath(__file__))
 
 
