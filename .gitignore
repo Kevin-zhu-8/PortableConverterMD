@@ -24,7 +24,6 @@ installer/
 # 资源（保留应用图标）
 *.png
 *.jpg
-!o.jpg
-ZENO.png
+!PortableConverterMD.png
 
 .gitignore

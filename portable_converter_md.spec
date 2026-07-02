@@ -4,7 +4,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('o.jpg', '.'), ('icon_download.svg', '.')],
+    datas=[('PortableConverterMD.png', '.'), ('icon_download.svg', '.')],
     hiddenimports=['markitdown', 'markitdown._markitdown'],
     hookspath=[],
     hooksconfig={},
@@ -30,7 +30,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='o.jpg',
+    icon='PortableConverterMD.png',
 )
 
 coll = COLLECT(
