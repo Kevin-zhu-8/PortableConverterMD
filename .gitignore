@@ -30,7 +30,9 @@ tesseract/
 # 资源（保留特定文件）
 *.png
 *.jpg
+*.ico
 !res/PortableConverterMD.png
+!res/PortableConverterMD.ico
 !res/screenshot.png
 !settings.json
 

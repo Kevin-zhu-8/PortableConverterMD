@@ -67,7 +67,7 @@ def main():
     app.setStyle("Fusion")
     app.setStyleSheet(GLOBAL_CSS)
 
-    icon_path = os.path.join(get_app_dir(), "res", "PortableConverterMD.png")
+    icon_path = os.path.join(get_app_dir(), "res", "PortableConverterMD.ico")
     if os.path.exists(icon_path):
         app.setWindowIcon(QIcon(icon_path))
 

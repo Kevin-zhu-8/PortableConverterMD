@@ -8,19 +8,19 @@ DefaultDirName={autopf}\PortableConverterMD
 DefaultGroupName=PortableConverterMD
 OutputDir=.\installer
 OutputBaseFilename=PortableConverterMD-Setup
-SetupIconFile=res\PortableConverterMD.png
+SetupIconFile=res\PortableConverterMD.ico
 Compression=lzma2
 SolidCompression=yes
-UninstallDisplayIcon={app}\res\PortableConverterMD.png
+UninstallDisplayIcon={app}\res\PortableConverterMD.ico
 WizardStyle=modern
 
 [Files]
 Source: "dist\PortableConverterMD\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\PortableConverterMD"; Filename: "{app}\PortableConverterMD.exe"; IconFilename: "{app}\res\PortableConverterMD.png"
+Name: "{group}\PortableConverterMD"; Filename: "{app}\PortableConverterMD.exe"; IconFilename: "{app}\res\PortableConverterMD.ico"
 Name: "{group}\卸载 PortableConverterMD"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\PortableConverterMD"; Filename: "{app}\PortableConverterMD.exe"; IconFilename: "{app}\res\PortableConverterMD.png"; Tasks: desktopicon
+Name: "{autodesktop}\PortableConverterMD"; Filename: "{app}\PortableConverterMD.exe"; IconFilename: "{app}\res\PortableConverterMD.ico"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "其他:"
@@ -28,7 +28,7 @@ Name: "contextmenu"; Description: "添加右键菜单「转换为 Markdown」"; 
 
 [Registry]
 Root: HKCR; Subkey: "*\shell\ConvertToMarkdown"; ValueType: string; ValueName: ""; ValueData: "转换为 Markdown"; Flags: uninsdeletekey; Tasks: contextmenu
-Root: HKCR; Subkey: "*\shell\ConvertToMarkdown"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\res\PortableConverterMD.png"; Tasks: contextmenu
+Root: HKCR; Subkey: "*\shell\ConvertToMarkdown"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\res\PortableConverterMD.ico"; Tasks: contextmenu
 Root: HKCR; Subkey: "*\shell\ConvertToMarkdown\command"; ValueType: string; ValueName: ""; ValueData: """{app}\PortableConverterMD.exe"" ""%1"""; Tasks: contextmenu
 
 [Run]

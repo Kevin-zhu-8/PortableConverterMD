@@ -10,6 +10,7 @@ a = Analysis(
     binaries=[],
     datas=[
         ('res/PortableConverterMD.png', 'res'),
+        ('res/PortableConverterMD.ico', 'res'),
         ('res/screenshot.png', 'res'),
         ('res/icon_download.svg', 'res'),
         ('tesseract', 'tesseract'),
@@ -43,7 +44,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='res/PortableConverterMD.png',
+    icon='res/PortableConverterMD.ico',
 )
 
 coll = COLLECT(
