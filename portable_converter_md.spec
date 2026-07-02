@@ -1,4 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
+import importlib.util
+import os as _os
+
+_magika_root = _os.path.dirname(importlib.util.find_spec('magika').origin)
 
 a = Analysis(
     ['main.py'],
@@ -11,8 +15,10 @@ a = Analysis(
         ('tesseract', 'tesseract'),
         ('settings.json', '.'),
         ('NOTICE', '.'),
+        (_os.path.join(_magika_root, 'models'), 'magika/models'),
+        (_os.path.join(_magika_root, 'config'), 'magika/config'),
     ],
-    hiddenimports=['markitdown', 'markitdown._markitdown'],
+    hiddenimports=['markitdown', 'markitdown._markitdown', 'magika'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
