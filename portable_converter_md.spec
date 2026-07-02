@@ -4,7 +4,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('o.jpg', '.')],
+    datas=[('o.jpg', '.'), ('icon_download.svg', '.')],
     hiddenimports=['markitdown', 'markitdown._markitdown'],
     hookspath=[],
     hooksconfig={},

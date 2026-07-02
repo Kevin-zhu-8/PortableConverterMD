@@ -192,9 +192,12 @@ class DropZone(QWidget):
         layout.setAlignment(Qt.AlignCenter)
         layout.setSpacing(4)
 
-        self.icon_label = QLabel("⬇")
+        self.icon_label = QLabel()
         self.icon_label.setAlignment(Qt.AlignCenter)
-        self.icon_label.setStyleSheet("font-size: 30px; color: #5b9bd5;")
+        svg_path = os.path.join(_get_app_dir(), "icon_download.svg")
+        icon = QIcon(svg_path)
+        self.icon_label.setPixmap(icon.pixmap(52, 52))
+        self.icon_label.setStyleSheet("border: none; background: transparent;")
 
         self.text_label = QLabel("拖拽文件到此处")
         self.text_label.setAlignment(Qt.AlignCenter)
