@@ -1,0 +1,376 @@
+"""PortableConverterMD — GUI 组件"""
+import os
+
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QDragEnterEvent, QDropEvent, QIcon
+from PySide6.QtWidgets import (
+    QFileDialog, QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
+    QMainWindow, QMessageBox, QProgressBar, QPushButton, QVBoxLayout,
+    QWidget,
+)
+
+from converter import get_app_dir
+from worker import ConvertWorker
+
+# ------------------------------------------------------------
+# CSS
+# ------------------------------------------------------------
+
+GLOBAL_CSS = """
+QMainWindow {
+    background: #f5f6f8;
+}
+QListWidget {
+    border: 1px solid #e0e3e8;
+    border-radius: 8px;
+    background: white;
+    padding: 4px;
+    font-size: 13px;
+    outline: none;
+}
+QListWidget::item {
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin: 1px 0;
+}
+QListWidget::item:selected {
+    background: #f0f5ff;
+    color: #303133;
+}
+QListWidget::item:hover {
+    background: #f5f7fa;
+}
+QListWidget::indicator {
+    width: 16px;
+    height: 16px;
+}
+QPushButton {
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: bold;
+    border: none;
+}
+QPushButton#btnConvert {
+    background: #4a90d9;
+    color: white;
+}
+QPushButton#btnConvert:hover {
+    background: #357abd;
+}
+QPushButton#btnConvert:pressed {
+    background: #2a6cb8;
+}
+QPushButton#btnConvert:disabled {
+    background: #c8d6e5;
+    color: #a0a8b4;
+}
+QPushButton#btnOpenDir {
+    background: white;
+    color: #4a90d9;
+    border: 1px solid #4a90d9;
+}
+QPushButton#btnOpenDir:hover {
+    background: #e8f0fe;
+}
+QPushButton#btnOpenDir:disabled {
+    background: white;
+    color: #c0c4cc;
+    border-color: #c0c4cc;
+}
+QPushButton#btnClear {
+    background: transparent;
+    color: #909399;
+    font-weight: normal;
+    padding: 4px 12px;
+}
+QPushButton#btnClear:hover {
+    color: #e74c3c;
+    background: #fef0f0;
+}
+QProgressBar {
+    border: none;
+    border-radius: 6px;
+    background: #e8ecf0;
+    height: 8px;
+    text-align: center;
+    font-size: 11px;
+    color: #606266;
+}
+QProgressBar::chunk {
+    border-radius: 6px;
+    background: qlineargradient(x1:0 y1:0, x2:1 y2:0,
+        stop:0 #4a90d9, stop:1 #5ba0e8);
+}
+QLabel#lblStatus {
+    color: #606266;
+    font-size: 12px;
+}
+QLabel#lblCount {
+    color: #909399;
+    font-size: 12px;
+}
+"""
+
+# ------------------------------------------------------------
+# DropZone
+# ------------------------------------------------------------
+
+
+class DropZone(QWidget):
+    """拖拽区域：支持拖入文件或点击选择。"""
+    files_dropped = Signal(list)
+
+    STYLE_NORMAL = """
+        QWidget#dropZone {
+            border: 2px dashed #c0c4cc;
+            border-radius: 16px;
+            background: qlineargradient(x1:0 y1:0, x2:0 y2:1,
+                stop:0 #fafbfc, stop:1 #f0f2f5);
+        }
+        QLabel { border: none; background: transparent; }
+    """
+    STYLE_DRAG = """
+        QWidget#dropZone {
+            border: 2px solid #4a90d9;
+            border-radius: 16px;
+            background: qlineargradient(x1:0 y1:0, x2:0 y2:1,
+                stop:0 #e8f0fe, stop:1 #d4e4fc);
+        }
+        QLabel { border: none; background: transparent; }
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.setObjectName("dropZone")
+        self.setAcceptDrops(True)
+        self.setAttribute(Qt.WA_StyledBackground, True)
+        self.setMinimumHeight(130)
+        self.setCursor(Qt.PointingHandCursor)
+
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setSpacing(4)
+
+        self.icon_label = QLabel()
+        self.icon_label.setAlignment(Qt.AlignCenter)
+        svg_path = os.path.join(get_app_dir(), "icon_download.svg")
+        icon = QIcon(svg_path)
+        self.icon_label.setPixmap(icon.pixmap(52, 52))
+        self.icon_label.setStyleSheet("border: none; background: transparent;")
+
+        self.text_label = QLabel("拖拽文件到此处")
+        self.text_label.setAlignment(Qt.AlignCenter)
+        self.text_label.setObjectName("dropText")
+        self.text_label.setStyleSheet("font-size: 15px; font-weight: bold; color: #303133;")
+
+        self.hint_label = QLabel("或点击选择文件")
+        self.hint_label.setAlignment(Qt.AlignCenter)
+        self.hint_label.setObjectName("dropHint")
+        self.hint_label.setStyleSheet("font-size: 12px; color: #909399;")
+
+        layout.addWidget(self.icon_label)
+        layout.addWidget(self.text_label)
+        layout.addWidget(self.hint_label)
+        self.setStyleSheet(self.STYLE_NORMAL)
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+            self.setStyleSheet(self.STYLE_DRAG)
+
+    def dragLeaveEvent(self, event):
+        self.setStyleSheet(self.STYLE_NORMAL)
+
+    def dropEvent(self, event: QDropEvent):
+        files = [url.toLocalFile() for url in event.mimeData().urls()]
+        if files:
+            self.files_dropped.emit(files)
+        self.setStyleSheet(self.STYLE_NORMAL)
+
+    def mousePressEvent(self, event):
+        files, _ = QFileDialog.getOpenFileNames(
+            self, "选择要转换的文件", "", "所有文件 (*.*)"
+        )
+        if files:
+            self.files_dropped.emit(files)
+
+
+# ------------------------------------------------------------
+# MainWindow
+# ------------------------------------------------------------
+
+
+class MainWindow(QMainWindow):
+    """PortableConverterMD 主窗口。"""
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("PortableConverterMD")
+        self.resize(620, 480)
+
+        icon_path = os.path.join(get_app_dir(), "PortableConverterMD.png")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+
+        self.file_paths: list[str] = []
+        self.output_dir: str = ""
+        self.worker: ConvertWorker | None = None
+
+        # 中央组件
+        central = QWidget()
+        self.setCentralWidget(central)
+        layout = QVBoxLayout(central)
+        layout.setSpacing(10)
+        layout.setContentsMargins(16, 16, 16, 16)
+
+        # 拖拽区
+        self.drop_zone = DropZone()
+        self.drop_zone.files_dropped.connect(self._add_files)
+        layout.addWidget(self.drop_zone)
+
+        # 文件列表
+        self.file_list = QListWidget()
+        self.file_list.setAlternatingRowColors(True)
+        layout.addWidget(self.file_list)
+
+        # 操作栏
+        btn_row = QHBoxLayout()
+        self.btn_clear = QPushButton("清空列表")
+        self.btn_clear.setObjectName("btnClear")
+        self.btn_clear.clicked.connect(self._clear_files)
+        self.btn_clear.setEnabled(False)
+        btn_row.addWidget(self.btn_clear)
+        btn_row.addStretch()
+        self.lbl_count = QLabel("0 个文件")
+        self.lbl_count.setObjectName("lblCount")
+        btn_row.addWidget(self.lbl_count)
+        layout.addLayout(btn_row)
+
+        # 状态
+        self.lbl_status = QLabel("就绪")
+        self.lbl_status.setObjectName("lblStatus")
+        layout.addWidget(self.lbl_status)
+
+        # 进度条
+        self.progress = QProgressBar()
+        self.progress.setVisible(False)
+        self.progress.setTextVisible(False)
+        layout.addWidget(self.progress)
+
+        # 操作按钮
+        action_row = QHBoxLayout()
+        self.btn_convert = QPushButton("开始转换")
+        self.btn_convert.setObjectName("btnConvert")
+        self.btn_convert.clicked.connect(self._start_conversion)
+        self.btn_convert.setEnabled(False)
+        self.btn_convert.setMinimumHeight(42)
+        action_row.addWidget(self.btn_convert)
+
+        self.btn_open_dir = QPushButton("打开输出目录")
+        self.btn_open_dir.setObjectName("btnOpenDir")
+        self.btn_open_dir.clicked.connect(self._open_output_dir)
+        self.btn_open_dir.setEnabled(False)
+        self.btn_open_dir.setMinimumHeight(42)
+        action_row.addWidget(self.btn_open_dir)
+        layout.addLayout(action_row)
+
+    # ---- 文件管理 ----
+
+    def _add_files(self, paths: list[str]):
+        for path in paths:
+            if path not in self.file_paths:
+                self.file_paths.append(path)
+                fname = os.path.basename(path)
+                size = os.path.getsize(path)
+                if size < 1024:
+                    size_str = f"{size} B"
+                elif size < 1024 * 1024:
+                    size_str = f"{size / 1024:.1f} KB"
+                else:
+                    size_str = f"{size / 1024 / 1024:.1f} MB"
+                item = QListWidgetItem(f"{fname}    {size_str}")
+                item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+                item.setCheckState(Qt.Checked)
+                item.setToolTip(path)
+                self.file_list.addItem(item)
+        self._update_ui()
+
+    def _clear_files(self):
+        self.file_list.clear()
+        self.file_paths.clear()
+        self._update_ui()
+
+    def _update_ui(self):
+        count = self.file_list.count()
+        self.lbl_count.setText(f"{count} 个文件")
+        has_files = count > 0
+        self.btn_clear.setEnabled(has_files)
+        self.btn_convert.setEnabled(has_files)
+
+    # ---- 转换 ----
+
+    def _get_checked_paths(self) -> list[str]:
+        checked = []
+        for i in range(self.file_list.count()):
+            item = self.file_list.item(i)
+            if item.checkState() == Qt.Checked:
+                checked.append(self.file_paths[i])
+        return checked
+
+    def _start_conversion(self):
+        checked = self._get_checked_paths()
+        if not checked:
+            QMessageBox.information(self, "提示", "没有勾选任何文件。")
+            return
+
+        self.output_dir = os.path.join(os.path.dirname(checked[0]), "md_output")
+
+        self.btn_convert.setEnabled(False)
+        self.btn_open_dir.setEnabled(False)
+        self.drop_zone.setEnabled(False)
+        self.progress.setVisible(True)
+        self.progress.setMaximum(len(checked))
+
+        self.worker = ConvertWorker(checked, self.output_dir)
+        self.worker.progress_updated.connect(self._on_progress)
+        self.worker.conversion_done.connect(self._on_done)
+        self.worker.start()
+
+    def _on_progress(self, current: int, total: int):
+        self.progress.setValue(current)
+        self.lbl_status.setText(f"已转换 {current}/{total}")
+
+    def _on_done(self, results: list):
+        success = sum(1 for r in results if r["output"] is not None)
+        failed = [r for r in results if r["output"] is None]
+        total = len(results)
+        self.progress.setVisible(False)
+        self.lbl_status.setText(f"完成：{success}/{total} 个文件转换成功")
+        self.drop_zone.setEnabled(True)
+        self.btn_open_dir.setEnabled(True)
+        self.btn_convert.setEnabled(True)
+
+        msg = f"成功转换 {success}/{total} 个文件。\n输出目录：{self.output_dir}"
+        if failed:
+            msg += "\n\n失败文件："
+            for r in failed:
+                fname = os.path.basename(r["file"])
+                msg += f"\n  * {fname}: {r['error']}"
+            log_path = os.path.join(get_app_dir(), "logs", "conversion.log")
+            msg += f"\n\n详细日志见：{log_path}"
+
+        box = QMessageBox(self)
+        box.setWindowTitle("转换完成")
+        box.setText(msg)
+        box.setIcon(QMessageBox.Warning if failed else QMessageBox.Information)
+        if failed:
+            box.setStandardButtons(QMessageBox.Ok)
+            box.setDetailedText(
+                "完整日志文件：" + os.path.join(get_app_dir(), "logs", "conversion.log")
+            )
+        box.exec()
+
+    def _open_output_dir(self):
+        if self.output_dir and os.path.isdir(self.output_dir):
+            os.startfile(self.output_dir)

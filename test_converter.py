@@ -4,7 +4,7 @@ import tempfile
 import pytest
 
 # 待实现
-from main import convert_file
+from converter import convert_file
 
 
 def test_convert_txt_to_markdown():
