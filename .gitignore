@@ -10,6 +10,8 @@ installer/
 
 # 环境
 .env
+.venv/
+venv/
 .superpowers/
 
 # 测试
@@ -33,5 +35,7 @@ tesseract/
 *.ico
 !res/PortableConverterMD.ico
 !res/screenshot.png
+!res/screenshot-dark.png
+!res/screenshot-settings.png
 
 .gitignore
